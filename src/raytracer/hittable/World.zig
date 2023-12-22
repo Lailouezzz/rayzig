@@ -16,7 +16,11 @@ pub fn hittable(self: *Self) Hittable {
 		.vtable = &.{
 			.doesHit = doesHit,
 			.printInfo = printInfo,
-			.deinit = deinit,
+			.destroy = struct {
+				fn _destroy(ctx: *anyopaque) void {
+					@as(*Self, @ptrCast(@alignCast(ctx))).destroy();
+				}
+			}._destroy,
 		},
 	};
 }
@@ -35,29 +39,28 @@ pub fn printInfo(ctx: *anyopaque) !void {
 	}
 }
 
-pub fn init(allocator: std.mem.Allocator) Self {
-	return Self {
+pub fn create(allocator: std.mem.Allocator) !*Self {
+	std.log.info("World: create.", .{});
+
+	const pobject = try allocator.create(Self);
+	errdefer allocator.destroy(pobject);
+	pobject.* = Self {
 		.hittableList = std.ArrayList(Hittable).init(allocator),
 		.allocator = allocator,
 	};
+	return pobject;
 }
 
-pub fn deinit(ctx: *anyopaque) void {
-	const self: *Self = @ptrCast(@alignCast(ctx));
-
+pub fn destroy(self: *Self) void {
 	for (self.hittableList.items) |object| {
-		object.deinit();
+		object.destroy();
 	}
 	self.hittableList.deinit();
+	self.allocator.destroy(self);
+
+	std.log.info("World: destroyed.", .{});
 }
 
-pub fn append(self: *Self, object: anytype) !void {
-	comptime {
-		if (!std.meta.hasFn(@TypeOf(object), "hittable"))
-			@compileError("object must have init fn.");
-	}
-	var pobject = try self.allocator.create(@TypeOf(object));
-	errdefer self.allocator.destroy(pobject);
-	pobject.* = object;
-	try self.hittableList.append(pobject.hittable());
+pub fn append(self: *Self, object: Hittable) !void {
+	try self.hittableList.append(object);
 }

@@ -13,34 +13,64 @@ radius: vector.Coord,
 allocator: std.mem.Allocator,
 
 pub fn hittable(self: *Self) Hittable {
-	return Hittable {
+	return Hittable{
 		.ptr = self,
 		.vtable = &.{
 			.doesHit = doesHit,
 			.printInfo = printInfo,
+			.destroy = struct {
+				fn _destroy(ctx: *anyopaque) void {
+					@as(*Self, @ptrCast(@alignCast(ctx))).destroy();
+				}
+			}._destroy,
 		},
 	};
 }
 
-pub fn init(center: vector.Point3f, radius: vector.Coord) Self {
-	return Self {
+pub fn create(center: vector.Point3f, radius: vector.Coord, allocator: std.mem.Allocator) !*Self {
+	std.log.info("Sphere: create.", .{});
+
+	const pobject = try allocator.create(Self);
+	errdefer allocator.destroy(pobject);
+	pobject.* = Self {
 		.center = center,
 		.radius = radius,
+		.allocator = allocator,
 	};
+	return pobject;
 }
 
-pub fn create(center: vector.Point3f, radius: vector.Coord) *Self {
+pub fn destroy(self: *Self) void {
+	self.allocator.destroy(self);
 
+	std.log.info("Sphere: destroyed.", .{});
 }
 
 pub fn doesHit(ctx: *anyopaque, ray: Ray) ?Ray.Hit {
-	_ = ctx;
-	_ = ray;
-	return null;
+	const self: *Self = @ptrCast(@alignCast(ctx));
+
+	const oc = ray.orig.sub(self.center);
+	const a = ray.dir.len_squared();
+	const half_b = oc.dot(ray.dir);
+	const c = oc.len_squared() - self.radius * self.radius;
+	const discriminant: f32 = half_b * half_b - a * c;
+
+	if (discriminant < 0)
+		return null;
+	var root = (-half_b - std.math.sqrt(discriminant)) / a;
+	if (root <= 0.01 or 1000 <= root) {
+		root = (-half_b + std.math.sqrt(discriminant)) / a;
+		if (root <= 0.01 or 1000 <= root)
+			return null;
+	}
+	return Ray.Hit {
+		.t = root,
+		.p = ray.at(root),
+	};
 }
 
 pub fn printInfo(ctx: *anyopaque) !void {
 	const self: *Self = @ptrCast(@alignCast(ctx));
 
-	std.log.info("Sphere: center = {} | radius = {d:.4}.", .{self.center, self.radius});
+	std.log.info("Sphere: center = {} | radius = {d:.4}.", .{ self.center, self.radius });
 }

@@ -6,7 +6,9 @@ pub const Ray = struct {
 	const Self = @This();
 
 	pub const Hit = struct {
-		what: *anyopaque,
+		t: vector.Coord = undefined,
+		normal: vector.Vector3f = undefined,
+		p: vector.Point3f = undefined,
 	};
 
 	orig: vector.Point3f,

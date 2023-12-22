@@ -60,7 +60,11 @@ pub fn Vector3(comptime T: type) type {
 		}
 
 		pub fn len(self: Self) T {
-			return std.math.sqrt(self.x * self.x + self.y * self.y + self.z * self.z);
+			return std.math.sqrt(self.len_squared());
+		}
+
+		pub fn len_squared(self: Self) T {
+			return self.x * self.x + self.y * self.y + self.z * self.z;
 		}
 
 		pub fn normalize(self: Self) Self {

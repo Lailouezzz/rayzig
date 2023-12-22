@@ -14,7 +14,7 @@ pub const Hittable = struct {
 	pub const VTable = struct {
 		doesHit: *const fn (ctx: *anyopaque, ray: Ray) ?Ray.Hit,
 		printInfo: *const fn (ctx: *anyopaque) anyerror!void,
-		deinit: *const fn (ctx: *anyopaque) void,
+		destroy: *const fn (ctx: *anyopaque) void,
 	};
 
 	pub fn doesHit(self: Self, ray: Ray) ?Ray.Hit {
@@ -25,7 +25,7 @@ pub const Hittable = struct {
 		return self.vtable.printInfo(self.ptr);
 	}
 
-	pub fn deinit(self: Self) void {
-		self.vtable.deinit(self.ptr);
+	pub fn destroy(self: Self) void {
+		self.vtable.destroy(self.ptr);
 	}
 };

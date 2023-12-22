@@ -30,7 +30,7 @@ const Renderer = struct {
 
 	pub fn init(camera: Camera, world: *World, fb: *sdl.SDL_Texture.FrameBuffer) @This() {
 		const focal_len = 1.0;
-		const viewport_height = 2.0;
+		const viewport_height = 4.0;
 		const viewport_width = viewport_height * (@as(vector.Coord, @floatFromInt(fb.width)) / @as(vector.Coord, @floatFromInt(fb.height)));
 
 		const viewport_u = vector.Vector3f.init(viewport_width, 0, 0);
@@ -58,13 +58,20 @@ const Renderer = struct {
 
 	pub fn render(self: @This()) !void {
 		std.log.info("Camera: Center = {any}.", .{self.center});
+		for (self.world.hittableList.items) |hittable| {
+			try hittable.printInfo();
+		}
 		for (0..self.fb.height) |y| {
 			// std.log.info("Camera: gen line {d}.", .{y});
 			for (0..self.fb.width) |x| {
 				const pixel_center = self.pixel00.add(self.delta_u.mul(@floatFromInt(x))).add(self.delta_v.mul(@floatFromInt(y)));
 				const dir = pixel_center.sub(self.center);
 				const ray = Ray.init(self.center, dir);
-				_ = ray;
+				for (self.world.hittableList.items) |hittable| {
+					if (hittable.doesHit(ray)) |_| {
+						self.fb.setPixel(x, y, sdl.Color.init(255, 0, 255).mul(1).asU32());
+					}
+				}
 			}
 		}
 	}

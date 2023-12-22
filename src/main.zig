@@ -7,6 +7,7 @@ pub fn main() !void {
 	var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
 	defer arena.deinit();
 	const allocator = arena.allocator();
+	// const allocator = std.heap.c_allocator;
 	var rayzigCtx = rayzig.RayzigCtx.init(allocator) catch |err| {
 		switch (err) {
 			sdl.SDL_Error.SDL_Error => std.log.err("SDL Error: {s}", .{sdl.csdl.SDL_GetError()}),

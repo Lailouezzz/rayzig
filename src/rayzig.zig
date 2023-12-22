@@ -17,7 +17,7 @@ pub const RayzigCtx = struct {
 	texture: sdl.SDL_Texture = undefined,
 	framebuffer: sdl.SDL_Texture.FrameBuffer = undefined,
 	camera: Camera = undefined,
-	world: World = undefined,
+	world: *World = undefined,
 
 	allocator: std.mem.Allocator = undefined,
 
@@ -32,14 +32,18 @@ pub const RayzigCtx = struct {
 		errdefer texture.deinit();
 		const fb = try texture.genFrameBuffer(allocator);
 		errdefer fb.deinit();
-		fb.clear(sdl.Color.init(255, 0, 0).asU32());
+		fb.clear(sdl.Color.init(20, 20, 20).asU32());
+		const world = try World.create(allocator);
+		errdefer world.destroy();
+		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, 0, 50), 10, allocator)).hittable());
+		//try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(10, 0, 10), 1, allocator)).hittable());
 		return Self {
 			.window = window,
 			.renderer = renderer,
 			.texture = texture,
 			.framebuffer = fb,
 			.camera = Camera.init(),
-			.world = World.init(allocator),
+			.world = world,
 			.allocator = allocator,
 		};
 	}
@@ -48,17 +52,6 @@ pub const RayzigCtx = struct {
 		var is_running: bool = true;
 		var event: sdl.csdl.SDL_Event = undefined;
 
-		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 20));
-		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 40));
-		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 40));
-		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 40));
-		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 40));
-		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 40));
-		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 400));
-		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 40));
-		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 40));
-		try self.world.hittable().printInfo();
-		try self.camera.render(&self.world, &self.framebuffer);
 		while (is_running) {
 			while (sdl.csdl.SDL_PollEvent(&event) == 1)
 			{
@@ -67,6 +60,9 @@ pub const RayzigCtx = struct {
 					else => {},
 				}
 			}
+			const theSphere = @as(*rt.hittable.Sphere, @ptrCast(@alignCast(self.world.hittableList.items[0].ptr)));
+			theSphere.radius += 0.1;
+			try self.camera.render(self.world, &self.framebuffer);
 			try self.texture.update(self.framebuffer);
 			try self.renderer.clear();
 			try self.renderer.copy(self.texture);
@@ -75,7 +71,7 @@ pub const RayzigCtx = struct {
 	}
 
 	pub fn deinit(self: Self) void {
-		self.world.deinit();
+		self.world.destroy();
 		self.framebuffer.deinit();
 		self.texture.deinit();
 		self.renderer.deinit();
