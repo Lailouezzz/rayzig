@@ -14,6 +14,35 @@ pub fn SDL_Quit() void {
 	csdl.SDL_Quit();
 }
 
+pub const Color = packed struct {
+	const Self = @This();
+	b: u8 = undefined,
+	g: u8 = undefined,
+	r: u8 = undefined,
+	a: u8 = 0,
+
+	pub fn init(r: u8, g: u8, b: u8) Self {
+		return Self {
+			.r = r,
+			.g = g,
+			.b = b,
+		};
+	}
+
+	pub fn mul(self: Self, factor: f32) Self {
+		return Self {
+			.b = @intFromFloat(@as(f32, @floatFromInt(self.b)) * factor),
+			.g = @intFromFloat(@as(f32, @floatFromInt(self.g)) * factor),
+			.r = @intFromFloat(@as(f32, @floatFromInt(self.r)) * factor),
+			.a = @intFromFloat(@as(f32, @floatFromInt(self.a)) * factor),
+		};
+	}
+
+	pub fn asU32(self: *const Self) u32 {
+		return @as(*const u32, @ptrCast(self)).*;
+	}
+};
+
 pub const SDL_Window = struct {
 	const Self = @This();
 

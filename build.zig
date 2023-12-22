@@ -15,6 +15,12 @@ pub fn build(b: *std.Build) void {
 	// set a preferred release mode, allowing the user to decide how to optimize.
 	const optimize = b.standardOptimizeOption(.{});
 
+	const sdlModule = b.addModule("sdl", .{.source_file = .{.path = "src/sdl.zig"}, .dependencies = &.{}});
+	const mathModule = b.addModule("math", .{.source_file = .{.path = "src/math.zig"}, .dependencies = &.{}});
+
+	const raytracerModule = b.addModule("raytracer", .{.source_file = .{.path = "src/raytracer.zig"},
+		.dependencies = &.{.{.name = "math", .module = mathModule}, .{.name = "sdl", .module = sdlModule}}});
+
 	const exe = b.addExecutable(.{
 		.name = "rayzig",
 		// In this case the main source file is merely a path, however, in more
@@ -28,6 +34,10 @@ pub fn build(b: *std.Build) void {
 	exe.linkLibC();
 	// Link SDL2
 	exe.linkSystemLibrary("sdl2");
+
+	exe.addModule("math", mathModule);
+	exe.addModule("raytracer", raytracerModule);
+	exe.addModule("sdl", sdlModule);
 
 	// This declares intent for the executable to be installed into the
 	// standard location when the user invokes the "install" step (the default

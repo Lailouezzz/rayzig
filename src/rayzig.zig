@@ -1,7 +1,13 @@
 const std = @import("std");
 
-const sdl = @import("sdl.zig");
+const sdl = @import("sdl");
 const config = @import("config.zig");
+
+const math = @import("math");
+const rt = @import("raytracer");
+
+const World = rt.hittable.World;
+const Camera = rt.Camera;
 
 pub const RayzigCtx = struct {
 	const Self = @This();
@@ -10,6 +16,8 @@ pub const RayzigCtx = struct {
 	renderer: sdl.SDL_Renderer = undefined,
 	texture: sdl.SDL_Texture = undefined,
 	framebuffer: sdl.SDL_Texture.FrameBuffer = undefined,
+	camera: Camera = undefined,
+	world: World = undefined,
 
 	allocator: std.mem.Allocator = undefined,
 
@@ -24,16 +32,50 @@ pub const RayzigCtx = struct {
 		errdefer texture.deinit();
 		const fb = try texture.genFrameBuffer(allocator);
 		errdefer fb.deinit();
+		fb.clear(sdl.Color.init(255, 0, 0).asU32());
 		return Self {
 			.window = window,
 			.renderer = renderer,
 			.texture = texture,
 			.framebuffer = fb,
+			.camera = Camera.init(),
+			.world = World.init(allocator),
 			.allocator = allocator,
 		};
 	}
 
+	pub fn run(self: *Self) anyerror!void {
+		var is_running: bool = true;
+		var event: sdl.csdl.SDL_Event = undefined;
+
+		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 20));
+		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 40));
+		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 40));
+		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 40));
+		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 40));
+		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 40));
+		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 400));
+		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 40));
+		try self.world.append(rt.hittable.Sphere.init(math.vector.Point3f.init(0, 0, 0), 40));
+		try self.world.hittable().printInfo();
+		try self.camera.render(&self.world, &self.framebuffer);
+		while (is_running) {
+			while (sdl.csdl.SDL_PollEvent(&event) == 1)
+			{
+				switch (event.type) {
+					sdl.csdl.SDL_QUIT => is_running = false,
+					else => {},
+				}
+			}
+			try self.texture.update(self.framebuffer);
+			try self.renderer.clear();
+			try self.renderer.copy(self.texture);
+			self.renderer.present();
+		}
+	}
+
 	pub fn deinit(self: Self) void {
+		self.world.deinit();
 		self.framebuffer.deinit();
 		self.texture.deinit();
 		self.renderer.deinit();

@@ -1,8 +1,11 @@
 const std = @import("std");
 
-pub const Vector3f32 = Vector3(f64);
+pub const Coord = f32;
+pub const Vector3f = Vector3(Coord);
+pub const Point3f = Vector3f;
 
 pub fn Vector3(comptime T: type) type {
+
 	// Little check
 	comptime {
 		if (@typeInfo(T) != .Float)
@@ -37,6 +40,22 @@ pub fn Vector3(comptime T: type) type {
 				.x = v1.x - v2.x,
 				.y = v1.y - v2.y,
 				.z = v1.z - v2.z,
+			};
+		}
+
+		pub fn mul(self: Self, factor: T) Self {
+			return Self {
+				.x = self.x * factor,
+				.y = self.y * factor,
+				.z = self.z * factor,
+			};
+		}
+
+		pub fn div(self: Self, factor: T) Self {
+			return Self {
+				.x = self.x / factor,
+				.y = self.y / factor,
+				.z = self.z / factor,
 			};
 		}
 
