@@ -30,7 +30,7 @@ const Renderer = struct {
 
 	pub fn init(camera: Camera, world: *World, fb: *sdl.SDL_Texture.FrameBuffer) @This() {
 		const focal_len = 1.0;
-		const viewport_height = 4.0;
+		const viewport_height = 1.2;
 		const viewport_width = viewport_height * (@as(vector.Coord, @floatFromInt(fb.width)) / @as(vector.Coord, @floatFromInt(fb.height)));
 
 		const viewport_u = vector.Vector3f.init(viewport_width, 0, 0);
@@ -39,13 +39,15 @@ const Renderer = struct {
 		const delta_u = viewport_u.div(@as(vector.Coord, @floatFromInt(fb.width)));
 		const delta_v = viewport_v.div(@as(vector.Coord, @floatFromInt(fb.height)));
 
+		const viewport_upper_left = camera.pos.sub(vector.Vector3f.init(0, 0, focal_len)).sub(viewport_u.div(2)).sub(viewport_v.div(2));
+
 		std.log.info("Camera: Viewport = {d:.3}x{d:.3}.", .{viewport_width, viewport_height});
 		std.log.info("Camera: Delta pixel u = {any} | v = {any}.", .{delta_u, delta_v});
 
 		return @This() {
 			.delta_u = delta_u,
 			.delta_v = delta_v,
-			.pixel00 = camera.pos.sub(vector.Vector3f.init(0, 0, focal_len)).sub(viewport_u.div(2)).sub(viewport_v.div(2)).add(delta_u.add(delta_v).div(2)),
+			.pixel00 = viewport_upper_left.add(delta_u.add(delta_v).div(2)),
 			.center = camera.pos,
 			.world = world,
 			.fb = fb,
@@ -57,20 +59,20 @@ const Renderer = struct {
 	}
 
 	pub fn render(self: @This()) !void {
-		std.log.info("Camera: Center = {any}.", .{self.center});
+		// std.log.info("Camera: Center = {any}.", .{self.center});
 		for (self.world.hittableList.items) |hittable| {
 			try hittable.printInfo();
 		}
+		const hittable_world = self.world.hittable();
 		for (0..self.fb.height) |y| {
 			// std.log.info("Camera: gen line {d}.", .{y});
 			for (0..self.fb.width) |x| {
 				const pixel_center = self.pixel00.add(self.delta_u.mul(@floatFromInt(x))).add(self.delta_v.mul(@floatFromInt(y)));
 				const dir = pixel_center.sub(self.center);
 				const ray = Ray.init(self.center, dir);
-				for (self.world.hittableList.items) |hittable| {
-					if (hittable.doesHit(ray)) |_| {
-						self.fb.setPixel(x, y, sdl.Color.init(255, 0, 255).mul(1).asU32());
-					}
+
+				if (hittable_world.doesHit(ray)) |hit| {
+					self.fb.setPixel(x, y, sdl.Color.init(255, 0, 255).mul(3 / (hit.t)).asU32());
 				}
 			}
 		}

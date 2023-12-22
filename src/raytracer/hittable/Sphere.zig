@@ -53,7 +53,7 @@ pub fn doesHit(ctx: *anyopaque, ray: Ray) ?Ray.Hit {
 	const a = ray.dir.len_squared();
 	const half_b = oc.dot(ray.dir);
 	const c = oc.len_squared() - self.radius * self.radius;
-	const discriminant: f32 = half_b * half_b - a * c;
+	const discriminant = half_b * half_b - a * c;
 
 	if (discriminant < 0)
 		return null;

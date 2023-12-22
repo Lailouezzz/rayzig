@@ -26,9 +26,19 @@ pub fn hittable(self: *Self) Hittable {
 }
 
 pub fn doesHit(ctx: *anyopaque, ray: Ray) ?Ray.Hit {
-	_ = ctx;
-	_ = ray;
-	return null;
+	const self: *Self = @ptrCast(@alignCast(ctx));
+	var nearest: math.vector.Coord = std.math.inf(math.vector.Coord);
+	var rec: ?Ray.Hit = null;
+	
+	for (self.hittableList.items) |object| {
+		if (object.doesHit(ray)) |hit| {
+			if (hit.t < nearest) {
+				nearest = hit.t;
+				rec = hit;
+			}
+		}
+	}
+	return rec;
 }
 
 pub fn printInfo(ctx: *anyopaque) !void {
