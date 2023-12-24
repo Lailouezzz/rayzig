@@ -62,7 +62,10 @@ pub const RayzigCtx = struct {
 			const theSphere = @as(*rt.hittable.Sphere, @ptrCast(@alignCast(self.world.hittableList.items[0].ptr)));
 			theSphere.radius += 0.01;
 			self.framebuffer.clear(sdl.Color.init(20, 20, 20).asU32());
+			const tStart = std.time.milliTimestamp();
 			try self.camera.render(self.world, &self.framebuffer);
+			const deltaTime = std.time.milliTimestamp() - tStart;
+			std.log.info("Frame time: {d}.", .{deltaTime});
 			try self.texture.update(self.framebuffer);
 			try self.renderer.clear();
 			try self.renderer.copy(self.texture);
