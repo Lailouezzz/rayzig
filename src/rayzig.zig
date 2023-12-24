@@ -60,10 +60,11 @@ pub const RayzigCtx = struct {
 				}
 			}
 			const theSphere = @as(*rt.hittable.Sphere, @ptrCast(@alignCast(self.world.hittableList.items[0].ptr)));
-			theSphere.radius += 0.01;
+			theSphere.radius += 0.001;
+			std.log.info("Radius = {d}.", .{theSphere.radius});
 			self.framebuffer.clear(sdl.Color.init(20, 20, 20).asU32());
 			const tStart = std.time.milliTimestamp();
-			try self.camera.render(self.world, &self.framebuffer);
+			try self.camera.render(self.world, &self.framebuffer, 32);
 			const deltaTime = std.time.milliTimestamp() - tStart;
 			std.log.info("Frame time: {d}.", .{deltaTime});
 			try self.texture.update(self.framebuffer);

@@ -1,6 +1,7 @@
 const std = @import("std");
 
 const sdl = @import("sdl");
+const math = @import("math");
 const rayzig = @import("rayzig.zig");
 
 pub fn main() !void {
@@ -8,6 +9,7 @@ pub fn main() !void {
 	defer arena.deinit();
 	const allocator = arena.allocator();
 	// const allocator = std.heap.c_allocator;
+	math.random.init();
 	var rayzigCtx = rayzig.RayzigCtx.init(allocator) catch |err| {
 		switch (err) {
 			sdl.SDL_Error.SDL_Error => std.log.err("SDL Error: {s}", .{sdl.csdl.SDL_GetError()}),

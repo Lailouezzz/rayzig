@@ -54,17 +54,32 @@ const Renderer = struct {
 		};
 	}
 
-	pub fn render(self: @This()) !void {
+	pub fn render(self: *@This(), sampleCount: u32) !void {
 		for (0..self.fb.height) |y| {
 			// std.log.info("Camera: gen line {d}.", .{y});
 			for (0..self.fb.width) |x| {
-				const pixel_center = self.pixel00.add(self.delta_u.mul(@floatFromInt(x))).add(self.delta_v.mul(@floatFromInt(y)));
-				const dir = pixel_center.sub(self.center);
-				const ray = Ray.init(self.center, dir);
+				const pixelCenter = self.pixel00.add(self.delta_u.mul(@floatFromInt(x))).add(self.delta_v.mul(@floatFromInt(y)));
 
-				self.fb.setPixel(x, y, _toRawColor(try self._rayColor(ray)).asU32());
+				var colors: vector.Color3f = vector.Color3f.init(0, 0, 0);
+				for (0..sampleCount) |_| {
+					const pixelSample = pixelCenter.add(self._randomInSquare());
+					const dir = pixelSample.sub(self.center);
+					const ray = Ray.init(self.center, dir);
+					
+					colors = colors.add(try self._rayColor(ray));
+				}
+				colors = colors.div(@floatFromInt(sampleCount));
+				self.fb.setPixel(x, y, _toRawColor(colors).asU32());
 			}
 		}
+	}
+
+	fn _randomInSquare(self: *@This()) vector.Point3f {
+		const rng = math.random.rng.random();
+
+		return self.delta_u.mul(rng.float(vector.FloatType) - 0.5).add(
+			self.delta_v.mul(rng.float(vector.FloatType) - 0.5)
+		);
 	}
 
 	fn _toRawColor(color: vector.Color3f) sdl.Color {
@@ -76,13 +91,16 @@ const Renderer = struct {
 
 	fn _rayColor(self: @This(), ray: Ray) !vector.Color3f {
 		const hittableWorld = self.world.hittable();
-		if (hittableWorld.doesHit(ray)) |_| {
-			return vector.Color3f.init(1, 1, 1);
+		if (hittableWorld.doesHit(ray)) |hit| {
+			return hit.normal.mul(-1).add(vector.Color3f.init(1, 1, 1)).mul(0.5);
 		}
-		return vector.Color3f.init(0.5, 0.5, 0.5);
+		const a = 0.5 * (ray.dir.normalize().y + 1);
+		return vector.Color3f.init(1, 1, 1).mul(1 - a).add(
+				vector.Color3f.init(0.5, 0.7, 1).mul(a));
 	}
 };
 
-pub fn render(self: Self, world: *World, fb: *sdl.SDL_Texture.FrameBuffer) !void {
-	try Renderer.init(self, world, fb).render();
+pub fn render(self: Self, world: *World, fb: *sdl.SDL_Texture.FrameBuffer, sampleCount: u32) !void {
+	var renderer = Renderer.init(self, world, fb);
+	try renderer.render(sampleCount);
 }

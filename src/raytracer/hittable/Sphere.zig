@@ -61,7 +61,7 @@ pub fn doesHit(ctx: *anyopaque, ray: Ray) ?Ray.Hit {
 	if (root < 0) {
 		root = (-half_b + std.math.sqrt(discriminant)) / a;
 	}
-	if (root < 0) return null;
+	if (root < 0.1) return null;
 	return Ray.Hit.init(ray, root, ray.at(root).sub(self.center).normalize(), ray.at(root));
 }
 
