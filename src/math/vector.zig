@@ -1,5 +1,7 @@
 const std = @import("std");
 
+const rng = &@import("random.zig").rng;
+
 pub const FloatType = f32;
 pub const Vector3f = Vector3(FloatType);
 pub const Point3f = Vector3f;
@@ -87,6 +89,19 @@ pub fn Vector3(comptime T: type) type {
 				.y = v1.z * v2.x - v1.x * v2.z,
 				.z = v1.x * v2.y - v1.y * v2.x,
 			};
+		}
+
+		pub fn random() Self {
+			return init(
+				rng.random().float(T) * 2 - 1,
+				rng.random().float(T) * 2 - 1,
+				rng.random().float(T) * 2 - 1
+			).normalize();
+		}
+
+		pub fn randomOnHemisphere(normal: Self) Self {
+			const randVec = random();
+			return if (normal.dot(randVec) > 0) randVec else randVec.mul(-1);
 		}
 	};
 }

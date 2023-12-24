@@ -2,6 +2,7 @@ const std = @import("std");
 
 const sdl = @import("sdl");
 const math = @import("math");
+const config = @import("config");
 
 const vector = math.vector;
 const World = @import("hittable.zig").World;
@@ -66,7 +67,7 @@ const Renderer = struct {
 					const dir = pixelSample.sub(self.center);
 					const ray = Ray.init(self.center, dir);
 					
-					colors = colors.add(try self._rayColor(ray));
+					colors = colors.add(self._rayColor(ray, config.maxRayBounce));
 				}
 				colors = colors.div(@floatFromInt(sampleCount));
 				self.fb.setPixel(x, y, _toRawColor(colors).asU32());
@@ -89,10 +90,12 @@ const Renderer = struct {
 			@intFromFloat(std.math.clamp(color.z, 0, 1) * 255)));
 	}
 
-	fn _rayColor(self: @This(), ray: Ray) !vector.Color3f {
+	fn _rayColor(self: @This(), ray: Ray, depth: u16) vector.Color3f {
+		if (depth == 0) return vector.Color3f.init(0, 0, 0);
 		const hittableWorld = self.world.hittable();
 		if (hittableWorld.doesHit(ray)) |hit| {
-			return hit.normal.mul(-1).add(vector.Color3f.init(1, 1, 1)).mul(0.5);
+			const dir = vector.Vector3f.randomOnHemisphere(hit.normal).add(hit.normal);
+			return self._rayColor(Ray.init(hit.p, dir), depth - 1).mul(0.5);
 		}
 		const a = 0.5 * (ray.dir.normalize().y + 1);
 		return vector.Color3f.init(1, 1, 1).mul(1 - a).add(

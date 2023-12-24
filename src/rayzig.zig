@@ -1,7 +1,7 @@
 const std = @import("std");
 
 const sdl = @import("sdl");
-const config = @import("config.zig");
+const config = @import("config");
 
 const math = @import("math");
 const rt = @import("raytracer");
@@ -35,8 +35,8 @@ pub const RayzigCtx = struct {
 		fb.clear(sdl.Color.init(20, 20, 20).asU32());
 		const world = try World.create(allocator);
 		errdefer world.destroy();
-		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, 0, 3), 1, allocator)).hittable());
-		//try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(10, 0, 10), 1, allocator)).hittable());
+		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, 0, 1), 0.5, allocator)).hittable());
+		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, -100.5, 1), 100, allocator)).hittable());
 		return Self {
 			.window = window,
 			.renderer = renderer,
@@ -60,11 +60,10 @@ pub const RayzigCtx = struct {
 				}
 			}
 			const theSphere = @as(*rt.hittable.Sphere, @ptrCast(@alignCast(self.world.hittableList.items[0].ptr)));
-			theSphere.radius += 0.001;
-			std.log.info("Radius = {d}.", .{theSphere.radius});
+			theSphere.radius += 0.00;
 			self.framebuffer.clear(sdl.Color.init(20, 20, 20).asU32());
 			const tStart = std.time.milliTimestamp();
-			try self.camera.render(self.world, &self.framebuffer, 32);
+			try self.camera.render(self.world, &self.framebuffer, config.sampleCount);
 			const deltaTime = std.time.milliTimestamp() - tStart;
 			std.log.info("Frame time: {d}.", .{deltaTime});
 			try self.texture.update(self.framebuffer);

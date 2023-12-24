@@ -9,6 +9,7 @@ pub const Ray = struct {
 		t: vector.FloatType = undefined,
 		normal: vector.Vector3f = undefined,
 		p: vector.Point3f = undefined,
+		// what: *anyopaque = undefined,
 
 		pub fn init(ray: Ray, t: vector.FloatType, outwardNormal: vector.Vector3f, p: vector.Point3f) @This() {
 			const normal = if (ray.dir.dot(outwardNormal) < 0) outwardNormal else outwardNormal.mul(-1);

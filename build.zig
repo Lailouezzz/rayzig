@@ -17,9 +17,13 @@ pub fn build(b: *std.Build) void {
 
 	const sdlModule = b.addModule("sdl", .{.source_file = .{.path = "src/sdl.zig"}, .dependencies = &.{}});
 	const mathModule = b.addModule("math", .{.source_file = .{.path = "src/math.zig"}, .dependencies = &.{}});
+	const configModule = b.addModule("config", .{.source_file = .{.path = "src/config.zig"}, .dependencies = &.{}});
 
 	const raytracerModule = b.addModule("raytracer", .{.source_file = .{.path = "src/raytracer.zig"},
-		.dependencies = &.{.{.name = "math", .module = mathModule}, .{.name = "sdl", .module = sdlModule}}});
+		.dependencies = &.{
+			.{.name = "math", .module = mathModule},
+			.{.name = "config", .module = configModule},
+			.{.name = "sdl", .module = sdlModule}}});
 
 	const exe = b.addExecutable(.{
 		.name = "rayzig",
@@ -36,6 +40,7 @@ pub fn build(b: *std.Build) void {
 	exe.linkSystemLibrary("sdl2");
 
 	exe.addModule("math", mathModule);
+	exe.addModule("config", configModule);
 	exe.addModule("raytracer", raytracerModule);
 	exe.addModule("sdl", sdlModule);
 
