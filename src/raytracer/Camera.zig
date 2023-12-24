@@ -41,8 +41,8 @@ const Renderer = struct {
 
 		const viewport_upper_left = camera.pos.add(vector.Vector3f.init(0, 0, focal_len)).sub(viewport_u.div(2)).sub(viewport_v.div(2));
 
-		std.log.info("Camera: Viewport = {d:.3}x{d:.3}.", .{ viewport_width, viewport_height });
-		std.log.info("Camera: Delta pixel u = {any} | v = {any}.", .{ delta_u, delta_v });
+		std.log.info("Renderer: Viewport = {d:.3}x{d:.3}.", .{ viewport_width, viewport_height });
+		std.log.info("Renderer: Delta pixel u = {any} | v = {any}.", .{ delta_u, delta_v });
 
 		return @This(){
 			.delta_u = delta_u,
@@ -55,9 +55,6 @@ const Renderer = struct {
 	}
 
 	pub fn render(self: @This()) !void {
-		for (self.world.hittableList.items) |hittable| {
-			try hittable.printInfo();
-		}
 		for (0..self.fb.height) |y| {
 			// std.log.info("Camera: gen line {d}.", .{y});
 			for (0..self.fb.width) |x| {

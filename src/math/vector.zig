@@ -1,9 +1,9 @@
 const std = @import("std");
 
-pub const FloatType = f16;
+pub const FloatType = f32;
 pub const Vector3f = Vector3(FloatType);
 pub const Point3f = Vector3f;
-pub const Color3f = Vector3f;
+pub const Color3f = Vector3(f32);
 
 pub fn Vector3(comptime T: type) type {
 
