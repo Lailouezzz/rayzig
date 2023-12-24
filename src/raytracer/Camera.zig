@@ -6,7 +6,7 @@ const config = @import("config");
 
 const vector = math.vector;
 const World = @import("hittable.zig").World;
-const Ray = math.ray.Ray;
+const Ray = @import("ray.zig").Ray;
 
 const Self = @This();
 const Camera = Self;
@@ -94,8 +94,12 @@ const Renderer = struct {
 		if (depth == 0) return vector.Color3f.init(0, 0, 0);
 		const hittableWorld = self.world.hittable();
 		if (hittableWorld.doesHit(ray)) |hit| {
-			const dir = vector.Vector3f.randomOnHemisphere(hit.normal).add(hit.normal);
-			return self._rayColor(Ray.init(hit.p, dir), depth - 1).mul(0.5);
+			const scatterRay = hit.what.scatter(hit);
+			const attenuation = hit.what.attenuation(hit);
+			if (scatterRay) |sr| {
+				return (self._rayColor(sr, depth - 1).mulv(attenuation));
+			}
+			return vector.Color3f.init(0, 0, 0);
 		}
 		const a = 0.5 * (ray.dir.normalize().y + 1);
 		return vector.Color3f.init(1, 1, 1).mul(1 - a).add(

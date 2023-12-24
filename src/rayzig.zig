@@ -7,6 +7,7 @@ const math = @import("math");
 const rt = @import("raytracer");
 
 const World = rt.hittable.World;
+const material = rt.material;
 const Camera = rt.Camera;
 
 pub const RayzigCtx = struct {
@@ -18,6 +19,7 @@ pub const RayzigCtx = struct {
 	framebuffer: sdl.SDL_Texture.FrameBuffer = undefined,
 	camera: Camera = undefined,
 	world: *World = undefined,
+	materials: material.MaterialMap = undefined,
 
 	allocator: std.mem.Allocator = undefined,
 
@@ -33,10 +35,14 @@ pub const RayzigCtx = struct {
 		const fb = try texture.genFrameBuffer(allocator);
 		errdefer fb.deinit();
 		fb.clear(sdl.Color.init(20, 20, 20).asU32());
+		var materials = material.MaterialMap.init(allocator);
+		try materials.addMaterial("ground", (try material.Lambertian.create(math.vector.Color3f.init(0.5, 0.5, 0.5), allocator)).material());
+		try materials.addMaterial("basic_metal", (try material.Metal.create(math.vector.Color3f.init(0.5, 0.5, 0.5), allocator)).material());
 		const world = try World.create(allocator);
 		errdefer world.destroy();
-		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, 0, 1), 0.5, allocator)).hittable());
-		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, -100.5, 1), 100, allocator)).hittable());
+		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, 0,1.5), 0.5, materials.getMaterial("ground").?, allocator)).hittable());
+		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(1, 0, 1.5), 0.5, materials.getMaterial("basic_metal").?, allocator)).hittable());
+		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, -100.5, 1.5), 100, materials.getMaterial("ground").?, allocator)).hittable());
 		return Self {
 			.window = window,
 			.renderer = renderer,
@@ -44,6 +50,7 @@ pub const RayzigCtx = struct {
 			.framebuffer = fb,
 			.camera = Camera.init(),
 			.world = world,
+			.materials = materials,
 			.allocator = allocator,
 		};
 	}
@@ -73,8 +80,9 @@ pub const RayzigCtx = struct {
 		}
 	}
 
-	pub fn deinit(self: Self) void {
+	pub fn deinit(self: *Self) void {
 		self.world.destroy();
+		self.materials.deinit();
 		self.framebuffer.deinit();
 		self.texture.deinit();
 		self.renderer.deinit();

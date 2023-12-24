@@ -2,8 +2,7 @@ const std = @import("std");
 
 const math = @import("math");
 const Hittable = @import("../hittable.zig").Hittable;
-
-const Ray = math.ray.Ray;
+const Ray = @import("../ray.zig").Ray;
 
 const Self = @This();
 

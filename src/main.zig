@@ -5,10 +5,10 @@ const math = @import("math");
 const rayzig = @import("rayzig.zig");
 
 pub fn main() !void {
-	var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-	defer arena.deinit();
-	const allocator = arena.allocator();
-	// const allocator = std.heap.c_allocator;
+	// var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+	// defer arena.deinit();
+	// const allocator = arena.allocator();
+	const allocator = std.heap.c_allocator;
 	math.random.init();
 	var rayzigCtx = rayzig.RayzigCtx.init(allocator) catch |err| {
 		switch (err) {

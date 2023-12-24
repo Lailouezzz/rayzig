@@ -54,6 +54,14 @@ pub fn Vector3(comptime T: type) type {
 			};
 		}
 
+		pub fn mulv(v1: Self, v2: Self) Self {
+			return Self {
+				.x = v1.x * v2.x,
+				.y = v1.y * v2.y,
+				.z = v1.z * v2.z,
+			};
+		}
+
 		pub fn div(self: Self, factor: T) Self {
 			return Self {
 				.x = self.x / factor,
@@ -77,6 +85,10 @@ pub fn Vector3(comptime T: type) type {
 				.y = self.y / l,
 				.z = self.z / l,
 			};
+		}
+
+		pub fn reflectBy(self: Self, normal: Self) Self {
+			return self.sub(normal.mul(2 * self.dot(normal)));
 		}
 
 		pub fn dot(v1: Self, v2: Self) T {

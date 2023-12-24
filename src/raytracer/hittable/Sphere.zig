@@ -2,15 +2,17 @@ const std = @import("std");
 
 const math = @import("math");
 const Hittable = @import("../hittable.zig").Hittable;
+const Material = @import("../material.zig").Material;
+const Ray = @import("../ray.zig").Ray;
 
 const vector = math.vector;
-const Ray = math.ray.Ray;
 
 const Self = @This();
 
 center: vector.Point3f,
 radius: vector.FloatType,
 allocator: std.mem.Allocator,
+mat: Material,
 
 pub fn hittable(self: *Self) Hittable {
 	return Hittable{
@@ -27,7 +29,7 @@ pub fn hittable(self: *Self) Hittable {
 	};
 }
 
-pub fn create(center: vector.Point3f, radius: vector.FloatType, allocator: std.mem.Allocator) !*Self {
+pub fn create(center: vector.Point3f, radius: vector.FloatType, mat: Material, allocator: std.mem.Allocator) !*Self {
 	std.log.info("Sphere: create.", .{});
 
 	const pobject = try allocator.create(Self);
@@ -36,6 +38,7 @@ pub fn create(center: vector.Point3f, radius: vector.FloatType, allocator: std.m
 		.center = center,
 		.radius = radius,
 		.allocator = allocator,
+		.mat = mat,
 	};
 	return pobject;
 }
@@ -46,7 +49,7 @@ pub fn destroy(self: *Self) void {
 	std.log.info("Sphere: destroyed.", .{});
 }
 
-pub fn doesHit(ctx: *anyopaque, ray: Ray) ?Ray.Hit {
+fn doesHit(ctx: *anyopaque, ray: Ray) ?Ray.Hit {
 	const self: *Self = @ptrCast(@alignCast(ctx));
 
 	const oc = ray.orig.sub(self.center);
@@ -62,10 +65,10 @@ pub fn doesHit(ctx: *anyopaque, ray: Ray) ?Ray.Hit {
 		root = (-half_b + std.math.sqrt(discriminant)) / a;
 	}
 	if (root < 0.001) return null;
-	return Ray.Hit.init(ray, root, ray.at(root).sub(self.center).normalize(), ray.at(root));
+	return Ray.Hit.init(ray, root, ray.at(root).sub(self.center).normalize(), ray.at(root), ray.dir, self.mat);
 }
 
-pub fn printInfo(ctx: *anyopaque) !void {
+fn printInfo(ctx: *anyopaque) !void {
 	const self: *Self = @ptrCast(@alignCast(ctx));
 
 	std.log.info("Sphere: center = {} | radius = {d:.4}.", .{ self.center, self.radius });

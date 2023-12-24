@@ -1,6 +1,6 @@
 const math = @import("math");
 
-const Ray = math.ray.Ray;
+const Ray = @import("ray.zig").Ray;
 
 pub const Sphere= @import("hittable/Sphere.zig");
 pub const World= @import("hittable/World.zig");
