@@ -35,8 +35,7 @@ pub const RayzigCtx = struct {
 		fb.clear(sdl.Color.init(20, 20, 20).asU32());
 		const world = try World.create(allocator);
 		errdefer world.destroy();
-		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, 0, 15), 0.00000001, allocator)).hittable());
-		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, 0, 150), 0.00000001, allocator)).hittable());
+		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, 0, 3), 1, allocator)).hittable());
 		//try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(10, 0, 10), 1, allocator)).hittable());
 		return Self {
 			.window = window,
@@ -61,8 +60,7 @@ pub const RayzigCtx = struct {
 				}
 			}
 			const theSphere = @as(*rt.hittable.Sphere, @ptrCast(@alignCast(self.world.hittableList.items[0].ptr)));
-			theSphere.center.x += 0.1;
-			theSphere.center.y += 0.05;
+			theSphere.radius += 0.01;
 			self.framebuffer.clear(sdl.Color.init(20, 20, 20).asU32());
 			try self.camera.render(self.world, &self.framebuffer);
 			try self.texture.update(self.framebuffer);

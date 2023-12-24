@@ -9,7 +9,7 @@ const Ray = math.ray.Ray;
 const Self = @This();
 
 center: vector.Point3f,
-radius: vector.Coord,
+radius: vector.FloatType,
 allocator: std.mem.Allocator,
 
 pub fn hittable(self: *Self) Hittable {
@@ -27,12 +27,12 @@ pub fn hittable(self: *Self) Hittable {
 	};
 }
 
-pub fn create(center: vector.Point3f, radius: vector.Coord, allocator: std.mem.Allocator) !*Self {
+pub fn create(center: vector.Point3f, radius: vector.FloatType, allocator: std.mem.Allocator) !*Self {
 	std.log.info("Sphere: create.", .{});
 
 	const pobject = try allocator.create(Self);
 	errdefer allocator.destroy(pobject);
-	pobject.* = Self {
+	pobject.* = Self{
 		.center = center,
 		.radius = radius,
 		.allocator = allocator,
@@ -58,15 +58,11 @@ pub fn doesHit(ctx: *anyopaque, ray: Ray) ?Ray.Hit {
 	if (discriminant < 0)
 		return null;
 	var root = (-half_b - std.math.sqrt(discriminant)) / a;
-	if (root <= 0.01 or 1000 <= root) {
+	if (root < 0) {
 		root = (-half_b + std.math.sqrt(discriminant)) / a;
-		if (root <= 0.01 or 1000 <= root)
-			return null;
 	}
-	return Ray.Hit {
-		.t = root,
-		.p = ray.at(root),
-	};
+	if (root < 0) return null;
+	return Ray.Hit.init(ray, root, ray.at(root).sub(self.center).normalize(), ray.at(root));
 }
 
 pub fn printInfo(ctx: *anyopaque) !void {
