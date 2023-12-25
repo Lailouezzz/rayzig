@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const rng = &@import("random.zig").rng;
+const rnd = @import("random.zig");
 
 pub const FloatType = f32;
 pub const Vector3f = Vector3(FloatType);
@@ -105,9 +105,9 @@ pub fn Vector3(comptime T: type) type {
 
 		pub fn random() Self {
 			return init(
-				rng.random().float(T) * 2 - 1,
-				rng.random().float(T) * 2 - 1,
-				rng.random().float(T) * 2 - 1
+				rnd.rng.random().float(T) * 2 - 1,
+				rnd.rng.random().float(T) * 2 - 1,
+				rnd.rng.random().float(T) * 2 - 1
 			).normalize();
 		}
 

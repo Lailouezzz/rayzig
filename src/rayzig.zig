@@ -36,6 +36,7 @@ pub const RayzigCtx = struct {
 		errdefer fb.deinit();
 		fb.clear(sdl.Color.init(20, 20, 20).asU32());
 		var materials = material.MaterialMap.init(allocator);
+		errdefer materials.deinit();
 		try materials.addMaterial("ground", (try material.Lambertian.create(math.vector.Color3f.init(0.5, 0.5, 0.5), allocator)).material());
 		try materials.addMaterial("basic_metal", (try material.Metal.create(math.vector.Color3f.init(0.5, 0.5, 0.5), allocator)).material());
 		const world = try World.create(allocator);
@@ -60,23 +61,23 @@ pub const RayzigCtx = struct {
 		var event: sdl.csdl.SDL_Event = undefined;
 
 		while (is_running) {
-			while (sdl.csdl.SDL_PollEvent(&event) == 1) {
-				switch (event.type) {
-					sdl.csdl.SDL_QUIT => is_running = false,
-					else => {},
-				}
-			}
 			const theSphere = @as(*rt.hittable.Sphere, @ptrCast(@alignCast(self.world.hittableList.items[0].ptr)));
 			theSphere.radius += 0.00;
 			self.framebuffer.clear(sdl.Color.init(20, 20, 20).asU32());
 			const tStart = std.time.milliTimestamp();
-			try self.camera.render(self.world, &self.framebuffer, config.sampleCount);
+			try self.camera.render(self.world, &self.framebuffer, config.sampleCount, config.threadCount, self.allocator);
 			const deltaTime = std.time.milliTimestamp() - tStart;
 			std.log.info("Frame time: {d}.", .{deltaTime});
 			try self.texture.update(self.framebuffer);
 			try self.renderer.clear();
 			try self.renderer.copy(self.texture);
 			self.renderer.present();
+			while (sdl.csdl.SDL_PollEvent(&event) == 1) {
+				switch (event.type) {
+					sdl.csdl.SDL_QUIT => is_running = false,
+					else => {},
+				}
+			}
 		}
 	}
 
