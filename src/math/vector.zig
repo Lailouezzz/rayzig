@@ -91,6 +91,13 @@ pub fn Vector3(comptime T: type) type {
 			return self.sub(normal.mul(2 * self.dot(normal)));
 		}
 
+		pub fn refractBy(self: Self, normal: Self, rr: T) Self {
+			const cosTheta = @min(self.mul(-1).dot(normal), 1.0);
+			const outPerp = self.add(normal.mul(cosTheta)).mul(rr);
+			const outParallel = normal.mul(-std.math.sqrt(std.math.fabs(1.0 - outPerp.len_squared())));
+			return outPerp.add(outParallel);
+		}
+
 		pub fn dot(v1: Self, v2: Self) T {
 			return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 		}
@@ -103,16 +110,20 @@ pub fn Vector3(comptime T: type) type {
 			};
 		}
 
+		pub fn randomNormal() Self {
+			return random().normalize();
+		}
+
 		pub fn random() Self {
 			return init(
-				rnd.rng.random().float(T) * 2 - 1,
-				rnd.rng.random().float(T) * 2 - 1,
-				rnd.rng.random().float(T) * 2 - 1
-			).normalize();
+				rnd.rng.random().floatNorm(T),
+				rnd.rng.random().floatNorm(T),
+				rnd.rng.random().floatNorm(T)
+			);
 		}
 
 		pub fn randomOnHemisphere(normal: Self) Self {
-			const randVec = random();
+			const randVec = randomNormal();
 			return if (normal.dot(randVec) > 0) randVec else randVec.mul(-1);
 		}
 	};

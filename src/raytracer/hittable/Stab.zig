@@ -9,8 +9,8 @@ const vector = math.vector;
 
 const Self = @This();
 
-center: vector.Point3f,
-radius: vector.FloatType,
+pos: vector.Point3f,
+dim: vector.Vector3f,
 allocator: std.mem.Allocator,
 mat: Material,
 
@@ -30,7 +30,7 @@ pub fn hittable(self: *Self) Hittable {
 }
 
 pub fn create(center: vector.Point3f, radius: vector.FloatType, mat: Material, allocator: std.mem.Allocator) !*Self {
-	std.log.info("Sphere: create.", .{});
+	std.log.info("Stab: create.", .{});
 
 	const pobject = try allocator.create(Self);
 	errdefer allocator.destroy(pobject);
@@ -71,5 +71,5 @@ fn doesHit(ctx: *anyopaque, ray: Ray) ?Ray.Hit {
 fn printInfo(ctx: *anyopaque) !void {
 	const self: *Self = @ptrCast(@alignCast(ctx));
 
-	std.log.info("Sphere: center = {} | radius = {d:.4}.", .{ self.center, self.radius });
+	std.log.info("Stab: center = {} | radius = {d:.4}.", .{ self.center, self.radius });
 }

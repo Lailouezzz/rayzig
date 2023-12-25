@@ -10,19 +10,23 @@ pub const Ray = struct {
 	pub const Hit = struct {
 		t: vector.FloatType = undefined,
 		normal: vector.Vector3f = undefined,
+		frontFace: bool = undefined,
 		p: vector.Point3f = undefined,
 		fromDir: vector.Vector3f = undefined,
 		what: Material = undefined,
 
-		pub fn init(ray: Ray, t: vector.FloatType, outwardNormal: vector.Vector3f, p: vector.Point3f, fromDir: vector.Vector3f, what: Material) @This() {
-			const normal = if (ray.dir.dot(outwardNormal) < 0) outwardNormal else outwardNormal.mul(-1);
-
-			return @This() {
-				.t = t,
-				.normal = normal,
-				.p = p,
-				.fromDir = fromDir,
-				.what = what,
+		pub fn init(ray: Ray, t: vector.FloatType, outwardNormal: vector.Vector3f, what: Material) @This() {
+			return hit: {
+				const frontFace = (ray.dir.dot(outwardNormal) < 0);
+				const normal = if (frontFace) outwardNormal else outwardNormal.mul(-1);
+				break :hit @This() {
+					.t = t,
+					.normal = normal,
+					.frontFace = frontFace,
+					.p = ray.at(t),
+					.fromDir = ray.dir,
+					.what = what,
+				};
 			};
 		}
 	};

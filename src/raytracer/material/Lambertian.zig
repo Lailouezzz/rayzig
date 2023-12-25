@@ -48,7 +48,7 @@ fn scatter(ctx: *anyopaque, hit: Ray.Hit) ?Ray {
 	const self = @as(*Self, @ptrCast(@alignCast(ctx)));
 
 	_ = self;
-	return Ray.init(hit.p, hit.normal.add(vector.Vector3f.random()));
+	return Ray.init(hit.p, hit.normal.add(vector.Vector3f.randomNormal()));
 }
 
 fn attenuation(ctx: *anyopaque, hit: Ray.Hit) math.vector.Color3f {

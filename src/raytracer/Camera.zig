@@ -12,12 +12,16 @@ const Self = @This();
 const Camera = Self;
 
 pos: vector.Point3f = undefined,
-dir: vector.Vector3f = undefined,
+lookat: vector.Point3f = undefined,
+fov: vector.FloatType = undefined,
+vup: vector.Point3f = undefined,
 
-pub fn init() Self {
+pub fn init(fov: vector.FloatType, pos: vector.Point3f, lookat: vector.Point3f) Self {
 	return Self{
-		.pos = vector.Point3f.init(0, 0, 0),
-		.dir = vector.Point3f.init(0, 0, 1),
+		.pos = pos,
+		.lookat = lookat,
+		.fov = fov,
+		.vup = vector.Vector3f.init(0, 1, 0),
 	};
 }
 
@@ -31,16 +35,23 @@ const Renderer = struct {
 
 	pub fn init(camera: Camera, world: *World, fb: *sdl.SDL_Texture.FrameBuffer) @This() {
 		const focal_len = 1.0;
-		const viewport_height = 2.0;
+
+		const theta = std.math.degreesToRadians(vector.FloatType, camera.fov);
+		const h = std.math.tan(theta / 2);
+		const viewport_height = 2 * h * focal_len;
 		const viewport_width = viewport_height * (@as(vector.FloatType, @floatFromInt(fb.width)) / @as(vector.FloatType, @floatFromInt(fb.height)));
 
-		const viewport_u = vector.Vector3f.init(viewport_width, 0, 0);
-		const viewport_v = vector.Vector3f.init(0, -viewport_height, 0);
+		const w = camera.pos.sub(camera.lookat).normalize();
+		const u = camera.vup.cross(w).normalize();
+		const v = w.cross(u).normalize();
+
+		const viewport_u = u.mul(viewport_width);
+		const viewport_v = v.mul(-viewport_height);
 
 		const delta_u = viewport_u.div(@as(vector.FloatType, @floatFromInt(fb.width)));
 		const delta_v = viewport_v.div(@as(vector.FloatType, @floatFromInt(fb.height)));
 
-		const viewport_upper_left = camera.pos.add(vector.Vector3f.init(0, 0, focal_len)).sub(viewport_u.div(2)).sub(viewport_v.div(2));
+		const viewport_upper_left = camera.pos.sub(w.mul(focal_len).add(viewport_u.div(2)).add(viewport_v.div(2)));
 
 		std.log.info("Renderer: Viewport = {d:.3}x{d:.3}.", .{ viewport_width, viewport_height });
 		std.log.info("Renderer: Delta pixel u = {any} | v = {any}.", .{ delta_u, delta_v });
@@ -118,11 +129,14 @@ const Renderer = struct {
 		if (hittableWorld.doesHit(ray)) |hit| {
 			const scatterRay = hit.what.scatter(hit);
 			const attenuation = hit.what.attenuation(hit);
+			const emission = hit.what.emission(hit);
 			if (scatterRay) |sr| {
-				return (self._rayColor(sr, depth - 1).mulv(attenuation));
+				return (self._rayColor(sr, depth - 1).mulv(attenuation).add(emission));
+			} else {
+				return emission;
 			}
-			return vector.Color3f.init(0, 0, 0);
 		}
+		// return vector.Color3f.init(0, 0, 0);
 		const a = 0.5 * (ray.dir.normalize().y + 1);
 		return vector.Color3f.init(1, 1, 1).mul(1 - a).add(
 				vector.Color3f.init(0.5, 0.7, 1).mul(a));

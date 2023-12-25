@@ -4,6 +4,9 @@ const math = @import("math");
 
 pub const Lambertian = @import("material/Lambertian.zig");
 pub const Metal = @import("material/Metal.zig");
+pub const Glass = @import("material/Glass.zig");
+pub const EqualReflection = @import("material/EqualReflection.zig");
+pub const Light = @import("material/Light.zig");
 
 const Ray = @import("ray.zig").Ray;
 
@@ -46,6 +49,7 @@ pub const Material = struct {
 	pub const VTable = struct {
 		scatter: *const fn (ctx: *anyopaque, hit: Ray.Hit) ?Ray,
 		attenuation: *const fn (ctx: *anyopaque, hit: Ray.Hit) math.vector.Color3f,
+		emission: ?*const fn (ctx: *anyopaque, hit: Ray.Hit) math.vector.Color3f = null,
 		destroy: *const fn (ctx: *anyopaque) void,
 	};
 
@@ -55,6 +59,13 @@ pub const Material = struct {
 
 	pub fn attenuation(self: Self, hit: Ray.Hit) math.vector.Color3f {
 		return self.vtable.attenuation(self.ptr, hit);
+	}
+
+	pub fn emission(self: Self, hit: Ray.Hit) math.vector.Color3f {
+		if (self.vtable.emission) |cb| {
+			return cb(self.ptr, hit);
+		}
+		return math.vector.Color3f.init(0, 0, 0);
 	}
 
 	pub fn destroy(self: Self) void {

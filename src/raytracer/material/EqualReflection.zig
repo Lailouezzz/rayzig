@@ -9,7 +9,6 @@ const vector = math.vector;
 const Self = @This();
 
 albelo: vector.Color3f,
-fuze: vector.FloatType,
 allocator: std.mem.Allocator,
 
 pub fn material(self: *Self) Material {
@@ -27,14 +26,13 @@ pub fn material(self: *Self) Material {
 	};
 }
 
-pub fn create(albelo: vector.Color3f, fuze: vector.FloatType, allocator: std.mem.Allocator) !*Self {
-	std.log.info("Material: Matal: create.", .{});
+pub fn create(albelo: vector.Color3f, allocator: std.mem.Allocator) !*Self {
+	std.log.info("Material: EqualReflection: create.", .{});
 
 	const pobject = try allocator.create(Self);
 	errdefer allocator.destroy(pobject);
 	pobject.* = Self {
 		.albelo = albelo,
-		.fuze = fuze,
 		.allocator = allocator,
 	};
 	return pobject;
@@ -43,13 +41,14 @@ pub fn create(albelo: vector.Color3f, fuze: vector.FloatType, allocator: std.mem
 pub fn destroy(self: *Self) void {
 	self.allocator.destroy(self);
 
-	std.log.info("Material: Metal: destroyed.", .{});
+	std.log.info("Material: EqualReflection: destroyed.", .{});
 }
 
 fn scatter(ctx: *anyopaque, hit: Ray.Hit) ?Ray {
 	const self = @as(*Self, @ptrCast(@alignCast(ctx)));
 
-	return Ray.init(hit.p, hit.fromDir.reflectBy(hit.normal).add(vector.Vector3f.randomNormal().mul(self.fuze)));
+	_ = self;
+	return Ray.init(hit.p, vector.Vector3f.randomOnHemisphere(hit.normal));
 }
 
 fn attenuation(ctx: *anyopaque, hit: Ray.Hit) math.vector.Color3f {
