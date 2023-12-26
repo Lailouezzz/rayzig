@@ -13,7 +13,7 @@ pub fn main() !void {
 	var rayzigCtx = rayzig.RayzigCtx.init(allocator) catch |err| {
 		switch (err) {
 			sdl.SDL_Error.SDL_Error => std.log.err("SDL Error: {s}", .{sdl.csdl.SDL_GetError()}),
-			else => std.log.err("Error: {}", .{err}),
+			else => std.log.err("Error: {}.", .{err}),
 		}
 		return err;
 	};

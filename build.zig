@@ -37,7 +37,8 @@ pub fn build(b: *std.Build) void {
 	// Link against libc
 	exe.linkLibC();
 	// Link SDL2
-	exe.linkSystemLibrary("sdl2");
+	exe.linkSystemLibrary("SDL2");
+	exe.linkSystemLibrary("SDL2_image");
 
 	exe.addModule("math", mathModule);
 	exe.addModule("config", configModule);

@@ -1,6 +1,9 @@
 const std = @import("std");
 
-pub const csdl = @cImport(@cInclude("SDL2/SDL.h"));
+pub const csdl = @cImport({
+	@cInclude("SDL2/SDL.h");
+	@cInclude("SDL2/SDL_image.h");
+});
 
 pub const SDL_Error = error{SDL_Error};
 
@@ -82,10 +85,30 @@ pub const SDL_Renderer = struct {
 		}
 	}
 
-	pub fn copy(self: Self, texture: SDL_Texture) !void {
+	pub fn copy(self: Self, texture: SDL_Texture) SDL_Error!void {
 		if (csdl.SDL_RenderCopy(self.renderer, texture.texture, null, null) < 0) {
 			return (SDL_Error.SDL_Error);
 		}
+	}
+
+	pub fn saveBMP(self: Self, texture: SDL_Texture, filename: [*c]const u8) SDL_Error!void {
+		defer std.log.info("Saved to BMP: \"{s}\".", .{filename});
+		const target = csdl.SDL_GetRenderTarget(self.renderer);
+		defer _ = csdl.SDL_SetRenderTarget(self.renderer, target);
+		if (csdl.SDL_SetRenderTarget(self.renderer, texture.texture) < 0)
+			return SDL_Error.SDL_Error;
+		var w: c_int = undefined;
+		var h: c_int = undefined;
+		if (csdl.SDL_QueryTexture(texture.texture, null, null, &w, &h) < 0)
+			return SDL_Error.SDL_Error;
+		var surface = csdl.SDL_CreateRGBSurface(0, w, h, 32, 0, 0, 0, 0);
+		defer csdl.SDL_FreeSurface(surface);
+		if (surface == null)
+			return SDL_Error.SDL_Error;
+		if (csdl.SDL_RenderReadPixels(self.renderer, null, surface.*.format.*.format, surface.*.pixels,surface.*.pitch) < 0)
+			return SDL_Error.SDL_Error;
+		if (csdl.IMG_SavePNG(surface, filename) < 0)
+			return SDL_Error.SDL_Error;
 	}
 
 	pub fn present(self: Self) void {
@@ -145,7 +168,7 @@ pub const SDL_Texture = struct {
 		return Self{
 			.texture = if (csdl.SDL_CreateTexture(renderer.renderer,
 				csdl.SDL_PIXELFORMAT_ARGB8888,
-				csdl.SDL_TEXTUREACCESS_STATIC,
+				csdl.SDL_TEXTUREACCESS_TARGET,
 				width, height)) |t| t else return SDL_Error.SDL_Error,
 			.width = width,
 			.height = height,

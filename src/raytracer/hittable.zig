@@ -2,8 +2,9 @@ const math = @import("math");
 
 const Ray = @import("ray.zig").Ray;
 
-pub const Sphere= @import("hittable/Sphere.zig");
-pub const World= @import("hittable/World.zig");
+pub const Sphere = @import("hittable/Sphere.zig");
+pub const Quad = @import("hittable/Quad.zig");
+pub const World = @import("hittable/World.zig");
 
 pub const Hittable = struct {
 	const Self = @This();

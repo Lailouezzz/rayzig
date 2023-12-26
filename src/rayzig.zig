@@ -41,20 +41,25 @@ pub const RayzigCtx = struct {
 		try materials.addMaterial("mat", (try material.Lambertian.create(math.vector.Color3f.init(0.5, 0.5, 0.5), allocator)).material());
 		try materials.addMaterial("light", (try material.Light.create(math.vector.Color3f.init(8, 8, 8), allocator)).material());
 		try materials.addMaterial("basic_metal", (try material.Metal.create(math.vector.Color3f.init(1, 1, 1), 0.3, allocator)).material());
-		try materials.addMaterial("basic_glass", (try material.Glass.create(math.vector.Color3f.init(1, 1, 1), 1.2, allocator)).material());
+		try materials.addMaterial("perfect_metal", (try material.Metal.create(math.vector.Color3f.init(0.95, 0.95, 0.95), 0.002, allocator)).material());
+		try materials.addMaterial("basic_glass", (try material.Glass.create(math.vector.Color3f.init(1, 1, 1), 1.20, allocator)).material());
 		const world = try World.create(allocator);
 		errdefer world.destroy();
 		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(-1, 1, 1.5), 0.5, materials.getMaterial("basic_glass").?, allocator)).hittable());
 		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, 0, 1.5), 0.5, materials.getMaterial("mat").?, allocator)).hittable());
 		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(1, 0, 1.5), 0.5, materials.getMaterial("basic_metal").?, allocator)).hittable());
 		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, 3.5, 1.5), 1, materials.getMaterial("light").?, allocator)).hittable());
-		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, -1000.5, 1.5), 1000, materials.getMaterial("ground").?, allocator)).hittable());
+		try world.append((try rt.hittable.Quad.create(math.vector.Point3f.init(-3, 3, 6), math.vector.Vector3f.init(20, 0, 0), math.vector.Vector3f.init(0, -3.5, 0), materials.getMaterial("perfect_metal").?, allocator)).hittable());
+		try world.append((try rt.hittable.Quad.create(math.vector.Point3f.init(-3, 3, 0), math.vector.Vector3f.init(20, 0, 0), math.vector.Vector3f.init(0, -3.5, 0), materials.getMaterial("perfect_metal").?, allocator)).hittable());
+		try world.append((try rt.hittable.Quad.create(math.vector.Point3f.init(-3, 3, 0), math.vector.Vector3f.init(0, 0, 6), math.vector.Vector3f.init(0, -3.5, 0), materials.getMaterial("mat").?, allocator)).hittable());
+		try world.append((try rt.hittable.Quad.create(math.vector.Point3f.init(-3, -0.5, 0), math.vector.Vector3f.init(20, 0, 0), math.vector.Vector3f.init(0, 0, 6), materials.getMaterial("ground").?, allocator)).hittable());
+		// try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, -1000.5, 1.5), 1000, materials.getMaterial("ground").?, allocator)).hittable());
 		return Self {
 			.window = window,
 			.renderer = renderer,
 			.texture = texture,
 			.framebuffer = fb,
-			.camera = Camera.init(config.defaultFov, math.vector.Point3f.init(8, 4, 8), math.vector.Vector3f.init(0, 0, 1.5)),
+			.camera = Camera.init(config.defaultFov, math.vector.Point3f.init(2, 2, 5.9), math.vector.Vector3f.init(0.5, 0.5, 1.5)),
 			.world = world,
 			.materials = materials,
 			.allocator = allocator,
@@ -62,16 +67,18 @@ pub const RayzigCtx = struct {
 	}
 
 	fn updateFrame(self: *Self) !void {
+		std.log.info("Rayzig: starting frame renderer.", .{});
 		self.framebuffer.clear(sdl.Color.init(0, 0, 0).asU32());
 		const tStart = std.time.milliTimestamp();
 		try self.camera.render(self.world, &self.framebuffer, config.sampleCount, config.threadCount, self.allocator);
 		const deltaTime = std.time.milliTimestamp() - tStart;
-		std.log.info("Frame time: {d}.", .{deltaTime});
+		std.log.info("Rayzig: Frame time: {d}.", .{deltaTime});
 		try self.texture.update(self.framebuffer);
 		try self.renderer.clear();
 	}
 
 	pub fn run(self: *Self) anyerror!void {
+		var buf: [1024]u8 = undefined;
 		var is_running: bool = true;
 		var event: sdl.csdl.SDL_Event = undefined;
 
@@ -83,6 +90,7 @@ pub const RayzigCtx = struct {
 					sdl.csdl.SDL_QUIT => is_running = false,
 					sdl.csdl.SDL_KEYDOWN => {
 						if (event.key.keysym.scancode == sdl.csdl.SDL_SCANCODE_R) try self.updateFrame();
+						if (event.key.keysym.scancode == sdl.csdl.SDL_SCANCODE_S) try self.renderer.saveBMP(self.texture, std.fmt.bufPrintZ(&buf, "renderer{d}.bmp", .{std.time.milliTimestamp()}) catch "render.bmp");
 					},
 					else => {},
 				}
