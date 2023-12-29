@@ -68,29 +68,41 @@ const Renderer = struct {
 
 	pub fn render(self: *@This(), sampleCount: u16, threadCount: u16, allocator: std.mem.Allocator) !void {
 		const threadCountClamp = std.math.clamp(threadCount, 1, self.fb.height);
-		const step = self.fb.height / threadCountClamp;
 		var threads = try allocator.alloc(std.Thread, threadCountClamp);
 		defer allocator.free(threads);
+		var queue = std.atomic.Queue(u16).init();
+		defer {
+			while (queue.get()) |*node| {
+				allocator.destroy(node);
+			}
+		}
+
+		for (0..self.fb.height) |y| {
+			var node: *std.atomic.Queue(u16).Node = try allocator.create(std.atomic.Queue(u16).Node);
+
+			node.* = .{
+				.prev = undefined,
+				.next = undefined,
+				.data = @intCast(y),
+			};
+			queue.put(
+				node
+			);
+		}
+
 		var nbThread: u16 = 0;
 
 		defer for (0..nbThread) |k| threads[k].join();
-		for (0..threadCountClamp - 1) |k| {
-			const startLine: u16 = @intCast(k * step);
-			const endLine: u16 = @intCast((k + 1) * step);
-
-			threads[k] = try std.Thread.spawn(.{}, _render, .{self, sampleCount, startLine, endLine});
+		for (0..threadCountClamp) |k| {
+			threads[k] = try std.Thread.spawn(.{}, _render, .{self, sampleCount, &queue});
 			nbThread += 1;
 		}
-		const startLine: u16 = @intCast((threadCountClamp - 1) * step);
-		const endLine: u16 = @intCast(self.fb.height);
-
-		threads[threadCountClamp - 1] = try std.Thread.spawn(.{}, _render, .{self, sampleCount, startLine, endLine});
-		nbThread += 1;
 	}
 
-	fn _render(self: *@This(), sampleCount: u16, startLine: u16, endLine: u16) void {
+	fn _render(self: *@This(), sampleCount: u16, queue: *std.atomic.Queue(u16)) void {
 		math.random.init();
-		for (startLine..endLine) |y| {
+		while (queue.get()) |node| {
+			const y = node.data;
 			for (0..self.fb.width) |x| {
 				const pixelCenter = self.pixel00.add(self.delta_u.mul(@floatFromInt(x))).add(self.delta_v.mul(@floatFromInt(y)));
 
@@ -136,10 +148,10 @@ const Renderer = struct {
 				return emission;
 			}
 		}
-		// return vector.Color3f.init(0, 0, 0);
-		const a = 0.5 * (ray.dir.normalize().y + 1);
-		return vector.Color3f.init(1, 1, 1).mul(1 - a).add(
-				vector.Color3f.init(0.5, 0.7, 1).mul(a));
+		return vector.Color3f.init(0, 0, 0);
+		// const a = 0.5 * (ray.dir.normalize().y + 1);
+		// return vector.Color3f.init(1, 1, 1).mul(1 - a).add(
+		// 		vector.Color3f.init(0.5, 0.7, 1).mul(a));
 	}
 };
 
