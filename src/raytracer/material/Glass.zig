@@ -10,6 +10,7 @@ const Self = @This();
 
 albelo: vector.Color3f,
 ir: vector.FloatType,
+fuze: vector.FloatType,
 allocator: std.mem.Allocator,
 
 pub fn material(self: *Self) Material {
@@ -27,7 +28,7 @@ pub fn material(self: *Self) Material {
 	};
 }
 
-pub fn create(albelo: vector.Color3f, ir: vector.FloatType, allocator: std.mem.Allocator) !*Self {
+pub fn create(albelo: vector.Color3f, ir: vector.FloatType, fuze: vector.FloatType, allocator: std.mem.Allocator) !*Self {
 	std.log.info("Material: Glass: create.", .{});
 
 	const pobject = try allocator.create(Self);
@@ -35,6 +36,7 @@ pub fn create(albelo: vector.Color3f, ir: vector.FloatType, allocator: std.mem.A
 	pobject.* = Self {
 		.albelo = albelo,
 		.ir = ir,
+		.fuze = fuze,
 		.allocator = allocator,
 	};
 	return pobject;
@@ -57,8 +59,8 @@ fn scatter(ctx: *anyopaque, hit: Ray.Hit) ?Ray {
 
 	const canRefract = rr * sinTheta < 1.0;
 
-	return if (canRefract or reflectance(cosTheta, rr) < math.random.rng.random().float(vector.FloatType)) Ray.init(hit.p, normalDir.refractBy(hit.normal, rr))
-		else Ray.init(hit.p, normalDir.reflectBy(hit.normal));
+	return if (canRefract or reflectance(cosTheta, rr) < math.random.rng.random().float(vector.FloatType)) Ray.init(hit.p, normalDir.refractBy(hit.normal, rr).add(vector.Vector3f.random().mul(self.fuze)))
+		else Ray.init(hit.p, normalDir.reflectBy(hit.normal).add(vector.Vector3f.random().mul(self.fuze)));
 }
 
 fn reflectance(cosine: vector.FloatType, rr: vector.FloatType) vector.FloatType{

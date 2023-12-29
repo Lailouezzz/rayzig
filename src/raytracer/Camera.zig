@@ -129,10 +129,10 @@ const Renderer = struct {
 	}
 
 	fn _toRawColor(color: vector.Color3f) sdl.Color {
-		return (sdl.Color.init(
+		return sdl.Color.init(
 			@intFromFloat(std.math.clamp(color.vec[0], 0, 1) * 255),
 			@intFromFloat(std.math.clamp(color.vec[1], 0, 1) * 255),
-			@intFromFloat(std.math.clamp(color.vec[2], 0, 1) * 255)));
+			@intFromFloat(std.math.clamp(color.vec[2], 0, 1) * 255));
 	}
 
 	fn _rayColor(self: @This(), ray: Ray, depth: u16) vector.Color3f {
