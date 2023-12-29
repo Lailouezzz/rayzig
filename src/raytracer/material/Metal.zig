@@ -49,7 +49,7 @@ pub fn destroy(self: *Self) void {
 fn scatter(ctx: *anyopaque, hit: Ray.Hit) ?Ray {
 	const self = @as(*Self, @ptrCast(@alignCast(ctx)));
 
-	return Ray.init(hit.p, hit.fromDir.reflectBy(hit.normal).add(vector.Vector3f.randomNormal().mul(self.fuze)));
+	return Ray.init(hit.p, hit.fromDir.reflectBy(hit.normal).add(vector.Vector3f.random().mul(self.fuze)));
 }
 
 fn attenuation(ctx: *anyopaque, hit: Ray.Hit) math.vector.Color3f {

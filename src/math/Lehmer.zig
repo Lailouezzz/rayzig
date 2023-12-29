@@ -17,7 +17,7 @@ pub fn random(self: *Lehmer) std.rand.Random {
 }
 
 pub fn next(self: *Lehmer) u64 {
-	self.state *= 0xda942042e4dd58b5;
+	self.state *%= 0xda942042e4dd58b5;
 	return (@truncate(self.state >> 64));
 }
 
