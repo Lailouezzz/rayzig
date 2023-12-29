@@ -72,7 +72,7 @@ const Renderer = struct {
 		defer allocator.free(threads);
 		var queue = std.atomic.Queue(u16).init();
 		defer {
-			while (queue.get()) |*node| {
+			while (queue.get()) |node| {
 				allocator.destroy(node);
 			}
 		}
@@ -120,7 +120,7 @@ const Renderer = struct {
 		}
 	}
 
-	fn _randomInSquare(self: *@This()) vector.Point3f {
+	fn _randomInSquare(self: *@This()) callconv(.Inline) vector.Point3f {
 		const rng = math.random.rng.random();
 
 		return self.delta_u.mul(rng.float(vector.FloatType) - 0.5).add(
@@ -130,9 +130,9 @@ const Renderer = struct {
 
 	fn _toRawColor(color: vector.Color3f) sdl.Color {
 		return (sdl.Color.init(
-			@intFromFloat(std.math.clamp(color.x, 0, 1) * 255),
-			@intFromFloat(std.math.clamp(color.y, 0, 1) * 255),
-			@intFromFloat(std.math.clamp(color.z, 0, 1) * 255)));
+			@intFromFloat(std.math.clamp(color.vec[0], 0, 1) * 255),
+			@intFromFloat(std.math.clamp(color.vec[1], 0, 1) * 255),
+			@intFromFloat(std.math.clamp(color.vec[2], 0, 1) * 255)));
 	}
 
 	fn _rayColor(self: @This(), ray: Ray, depth: u16) vector.Color3f {
@@ -149,7 +149,7 @@ const Renderer = struct {
 			}
 		}
 		return vector.Color3f.init(0, 0, 0);
-		// const a = 0.5 * (ray.dir.normalize().y + 1);
+		// const a = 0.5 * (ray.dir.normalize().vec[1] + 1);
 		// return vector.Color3f.init(1, 1, 1).mul(1 - a).add(
 		// 		vector.Color3f.init(0.5, 0.7, 1).mul(a));
 	}

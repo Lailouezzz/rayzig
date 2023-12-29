@@ -18,15 +18,15 @@ pub const Hittable = struct {
 		destroy: *const fn (ctx: *anyopaque) void,
 	};
 
-	pub fn doesHit(self: Self, ray: Ray) ?Ray.Hit {
+	pub fn doesHit(self: Self, ray: Ray) callconv(.Inline) ?Ray.Hit {
 		return self.vtable.doesHit(self.ptr, ray);
 	}
 
-	pub fn printInfo(self: Self) !void {
+	pub fn printInfo(self: Self) callconv(.Inline) !void {
 		return self.vtable.printInfo(self.ptr);
 	}
 
-	pub fn destroy(self: Self) void {
+	pub fn destroy(self: Self) callconv(.Inline) void {
 		self.vtable.destroy(self.ptr);
 	}
 };

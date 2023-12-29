@@ -143,7 +143,7 @@ pub const SDL_Texture = struct {
 			@memset(self.buffer, color);
 		}
 
-		pub fn setPixel(self: @This(), x: usize, y: usize, color: u32) void {
+		pub fn setPixel(self: @This(), x: usize, y: usize, color: u32) callconv(.Inline) void {
 			self.buffer[x + y * self.width] = color;
 		}
 

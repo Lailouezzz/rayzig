@@ -34,7 +34,7 @@ pub const Ray = struct {
 	orig: vector.Point3f,
 	dir: vector.Vector3f,
 
-	pub fn init(orig: vector.Point3f, dir: vector.Vector3f) Self {
+	pub fn init(orig: vector.Point3f, dir: vector.Vector3f) callconv(.Inline) Self {
 		return Self {
 			.orig = orig,
 			.dir = dir,

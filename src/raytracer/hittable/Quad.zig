@@ -19,7 +19,7 @@ allocator: std.mem.Allocator,
 mat: Material,
 
 pub fn hittable(self: *Self) Hittable {
-	return Hittable{
+	return Hittable {
 		.ptr = self,
 		.vtable = &.{
 			.doesHit = doesHit,

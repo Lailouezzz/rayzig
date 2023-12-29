@@ -15,7 +15,7 @@ allocator: std.mem.Allocator,
 mat: Material,
 
 pub fn hittable(self: *Self) Hittable {
-	return Hittable{
+	return Hittable {
 		.ptr = self,
 		.vtable = &.{
 			.doesHit = doesHit,
@@ -34,7 +34,7 @@ pub fn create(center: vector.Point3f, radius: vector.FloatType, mat: Material, a
 
 	const pobject = try allocator.create(Self);
 	errdefer allocator.destroy(pobject);
-	pobject.* = Self{
+	pobject.* = Self {
 		.center = center,
 		.radius = radius,
 		.allocator = allocator,

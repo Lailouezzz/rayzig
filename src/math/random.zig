@@ -1,7 +1,11 @@
 const std = @import("std");
 
-pub threadlocal var rng: std.rand.DefaultPrng = undefined;
+const Lehmer = @import("Lehmer.zig");
+
+const RandDefault = Lehmer;
+
+pub threadlocal var rng: RandDefault = undefined;
 
 pub fn init() void {
-	rng = std.rand.DefaultPrng.init(@as(u64,@intCast(std.time.microTimestamp())));
+	rng = RandDefault.init(@intCast(std.time.nanoTimestamp()));
 }

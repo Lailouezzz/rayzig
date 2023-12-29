@@ -46,6 +46,7 @@ pub const RayzigCtx = struct {
 		const world = try World.create(allocator);
 		errdefer world.destroy();
 		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(-1, 1, 1.5), 0.5, materials.getMaterial("basic_glass").?, allocator)).hittable());
+		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(-1, 1, 1.5), -0.4, materials.getMaterial("basic_glass").?, allocator)).hittable());
 		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, 0, 1.5), 0.5, materials.getMaterial("mat").?, allocator)).hittable());
 		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(1, 0, 1.5), 0.5, materials.getMaterial("basic_metal").?, allocator)).hittable());
 		try world.append((try rt.hittable.Sphere.create(math.vector.Point3f.init(0, 6, 1.5), 0.5, materials.getMaterial("light").?, allocator)).hittable());

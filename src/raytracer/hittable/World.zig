@@ -24,7 +24,7 @@ pub fn hittable(self: *Self) Hittable {
 	};
 }
 
-pub fn doesHit(ctx: *anyopaque, ray: Ray) ?Ray.Hit {
+fn doesHit(ctx: *anyopaque, ray: Ray) ?Ray.Hit {
 	const self: *Self = @ptrCast(@alignCast(ctx));
 	var nearest: math.vector.FloatType = std.math.inf(math.vector.FloatType);
 	var rec: ?Ray.Hit = null;

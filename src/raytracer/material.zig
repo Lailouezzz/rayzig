@@ -53,22 +53,22 @@ pub const Material = struct {
 		destroy: *const fn (ctx: *anyopaque) void,
 	};
 
-	pub fn scatter(self: Self, hit: Ray.Hit) ?Ray {
+	pub fn scatter(self: Self, hit: Ray.Hit) callconv(.Inline) ?Ray {
 		return self.vtable.scatter(self.ptr, hit);
 	}
 
-	pub fn attenuation(self: Self, hit: Ray.Hit) math.vector.Color3f {
+	pub fn attenuation(self: Self, hit: Ray.Hit) callconv(.Inline) math.vector.Color3f {
 		return self.vtable.attenuation(self.ptr, hit);
 	}
 
-	pub fn emission(self: Self, hit: Ray.Hit) math.vector.Color3f {
+	pub fn emission(self: Self, hit: Ray.Hit) callconv(.Inline) math.vector.Color3f {
 		if (self.vtable.emission) |cb| {
 			return cb(self.ptr, hit);
 		}
 		return math.vector.Color3f.init(0, 0, 0);
 	}
 
-	pub fn destroy(self: Self) void {
+	pub fn destroy(self: Self) callconv(.Inline) void {
 		self.vtable.destroy(self.ptr);
 	}
 };
